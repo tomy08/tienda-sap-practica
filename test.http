@@ -1,0 +1,62 @@
+### 1. Pedido con dos ítems (deep insert) → 201
+POST http://localhost:4004/odata/v4/tienda/Pedidos
+Content-Type: application/json
+
+{
+  "ID": 10,
+  "cliente_ID": 1,
+  "items": [
+    { "pos": 1, "producto_ID": 1, "cantidad": 2 },
+    { "pos": 2, "producto_ID": 3, "cantidad": 1 }
+  ]
+}
+
+### 2. Verlo con sus ítems y los productos de cada ítem
+GET http://localhost:4004/odata/v4/tienda/Pedidos(10)?$expand=items($expand=producto)
+
+### 3. Cantidad fuera de rango → 400
+POST http://localhost:4004/odata/v4/tienda/Pedidos
+Content-Type: application/json
+
+{ "ID": 11, "cliente_ID": 1, "items": [ { "pos": 1, "producto_ID": 1, "cantidad": 0 } ] }
+
+### 4. Producto inexistente → 400
+POST http://localhost:4004/odata/v4/tienda/Pedidos
+Content-Type: application/json
+
+{ "ID": 12, "cliente_ID": 1, "items": [ { "pos": 1, "producto_ID": 99, "cantidad": 1 } ] }
+
+### 5. Modificar un pedido entregado → 409
+PATCH http://localhost:4004/odata/v4/tienda/Pedidos(2)
+Content-Type: application/json
+
+{ "estado": "Enviado" }
+
+### 6. Estado inválido → 400
+PATCH http://localhost:4004/odata/v4/tienda/Pedidos(1)
+Content-Type: application/json
+
+{ "estado": "Perdido" }
+
+### Pedido con precio trucho: el servidor lo corrige
+POST http://localhost:4004/odata/v4/tienda/Pedidos
+Content-Type: application/json
+
+{
+  "ID": 20,
+  "cliente_ID": 2,
+  "total": 1,
+  "items": [
+    { "pos": 1, "producto_ID": 1, "cantidad": 1, "precio": 1 },
+    { "pos": 2, "producto_ID": 2, "cantidad": 3 }
+  ]
+}
+
+### Verlo: precio real, subtotal calculado y total correcto
+GET http://localhost:4004/odata/v4/tienda/Pedidos(20)?$expand=items
+
+### Modificar un ítem del pedido entregado → 409
+PATCH http://localhost:4004/odata/v4/tienda/PedidoItems(pedido_ID=2,pos=1)
+Content-Type: application/json
+
+{ "cantidad": 10 }
