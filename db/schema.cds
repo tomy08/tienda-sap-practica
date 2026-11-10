@@ -1,7 +1,7 @@
 namespace tienda;
 using { managed } from '@sap/cds/common';
 
-type Estado : String(20) enum { Nuevo; Enviado; Entregado; }
+type Estado : String(20) enum { Nuevo; Enviado; Entregado; Cancelado; }
 
 entity Clientes {
   key ID     : Integer;
@@ -13,14 +13,16 @@ entity Productos {
   key ID     : Integer;
       nombre : String(100);
       precio : Decimal(10,2);
+      stock  : Integer default 0;
 }
 
 entity Pedidos : managed {
-  key ID      : Integer;
-      cliente : Association to Clientes;
-      estado  : Estado default 'Nuevo';
-      total   : Decimal(12,2);                       // lo calcula el servidor
-      items   : Composition of many PedidoItems on items.pedido = $self;
+  key ID                : Integer;
+      cliente           : Association to Clientes;
+      estado            : Estado default 'Nuevo';
+      motivoCancelacion : String(200);
+      total             : Decimal(12,2);
+      items             : Composition of many PedidoItems on items.pedido = $self;
 }
 
 entity PedidoItems {
@@ -28,6 +30,6 @@ entity PedidoItems {
   key pos      : Integer;
       producto : Association to Productos;
       cantidad : Integer;
-      precio   : Decimal(10,2);                      // foto del precio al comprar
-      subtotal : Decimal(12,2) = precio * cantidad;  // se calcula al leer
+      precio   : Decimal(10,2);
+      subtotal : Decimal(12,2) = precio * cantidad;
 }
