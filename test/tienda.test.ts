@@ -4,11 +4,11 @@ import cds from '@sap/cds'
 
 // Devuelve { status, data } tanto si la request sale bien como si falla.
 // cds.test lanza una excepción con los errores 4xx/5xx; así los tratamos igual.
-async function llamar(request) {
+async function llamar(request: Promise<any>) {
   try {
     const { status, data } = await request
     return { status, data }
-  } catch (error) {
+  } catch (error: any) {
     return {
       status: error.response?.status ?? error.status,
       data: error.response?.data,
