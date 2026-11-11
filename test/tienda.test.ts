@@ -133,7 +133,7 @@ describe('TiendaService', () => {
   describe('Functions', () => {
     it('totalPorCliente suma los pedidos del cliente', async () => {
       const { data } = await GET(`${base}/totalPorCliente(cliente=1)`)
-      assert.equal(Number(data), 515000) // pedido 1 del CSV
+      assert.equal(Number(data?.value), 515000) // pedido 1 del CSV
     })
   })
 })

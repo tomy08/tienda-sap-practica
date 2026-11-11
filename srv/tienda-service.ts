@@ -10,9 +10,12 @@ import {
   TRANSICIONES,
   transicionPermitida,
   type Accion,
-} from './lib/transiciones.js'
+} from './lib/transiciones.ts'
 
 const LOG = cds.log('tienda')
+
+const UMBRAL_STOCK = 3
+type ProductoStockBajo = { producto: number; nombre: string; stock: number }
 
 // ---------- Funciones auxiliares ----------
 
@@ -26,7 +29,10 @@ async function cambiarEstado(
   const pedido = await SELECT.one.from(req.subject).columns('ID', 'estado')
   if (!pedido) return req.reject(404, 'PEDIDO_NO_EXISTE')
   if (!transicionPermitida(accion, pedido.estado)) {
-    return req.reject(409, 'TRANSICION_INVALIDA', [pedido.estado, hacia])
+    return req.reject(409, 'TRANSICION_INVALIDA', undefined, [
+      pedido.estado,
+      hacia,
+    ])
   }
   await UPDATE(req.subject).with({ estado: hacia, ...otrosCambios })
   return pedido.ID
@@ -39,12 +45,29 @@ async function descontarStock(req: cds.Request, pedidoID: number) {
     .where({ pedido_ID: pedidoID })
 
   const sinStock: string[] = []
+  const stockBajo: ProductoStockBajo[] = []
+
   for (const item of items) {
-    const filas = await UPDATE(Productos, item.producto_ID)
+    const filas = await UPDATE(Productos, item.producto_ID!)
       .with`stock = stock - ${item.cantidad}`.where`stock >= ${item.cantidad}`
     if (filas === 0) sinStock.push(String(item.producto_ID))
+
+    const producto = await SELECT.one
+      .from(Productos, item.producto_ID)
+      .columns('ID', 'nombre', 'stock')
+    const stock = producto?.stock ?? 0
+    if (producto && stock <= UMBRAL_STOCK) {
+      stockBajo.push({
+        producto: producto.ID,
+        nombre: producto.nombre ?? '',
+        stock,
+      })
+    }
   }
-  if (sinStock.length > 0) req.reject(409, 'SIN_STOCK', [sinStock.join(', ')])
+  if (sinStock.length > 0)
+    req.reject(409, 'SIN_STOCK', undefined, [sinStock.join(', ')])
+
+  return stockBajo
 }
 
 // Devuelve al stock lo que tenía el pedido. Sumar nunca falla.
@@ -54,7 +77,7 @@ async function reponerStock(pedidoID: number) {
     .where({ pedido_ID: pedidoID })
 
   for (const item of items) {
-    await UPDATE(Productos, item.producto_ID)
+    await UPDATE(Productos, item.producto_ID!)
       .with`stock = stock + ${item.cantidad}`
   }
 }
@@ -89,7 +112,7 @@ export default class TiendaService extends cds.ApplicationService {
         .columns('ID', 'precio')
         .where({ ID: { in: ids } })
       const precioDe = new Map(
-        productos.map((p): [number, number] => [p.ID, Number(p.precio)]),
+        productos.map((p): [number, number] => [p.ID!, Number(p.precio)]),
       )
 
       let total = 0
@@ -109,7 +132,7 @@ export default class TiendaService extends cds.ApplicationService {
       const pedido = await SELECT.one.from(req.subject).columns('estado')
       if (!pedido) return req.reject(404, 'PEDIDO_NO_EXISTE')
       if (pedido.estado !== 'Nuevo')
-        req.reject(409, 'PEDIDO_NO_EDITABLE', [pedido.estado])
+        req.reject(409, 'PEDIDO_NO_EDITABLE', undefined, [pedido.estado])
     })
 
     // Ítems: solo a través del pedido (no usa datos, alcanza con el nombre)
@@ -120,9 +143,20 @@ export default class TiendaService extends cds.ApplicationService {
     // Actions
     this.on('enviar', 'Pedidos', async (req) => {
       const pedidoID = await cambiarEstado(req, 'enviar')
-      await descontarStock(req, pedidoID)
+      const stockBajo = await descontarStock(req, pedidoID)
+      const pedido = pedidoActual(req)
+
+      await this.emit('PedidoEnviado', {
+        pedido: pedidoID,
+        cliente: (await pedido)?.cliente_ID,
+        total: (await pedido)?.total,
+      })
+      for (const producto of stockBajo) {
+        await this.emit('StockBajo', producto)
+      }
+
       LOG.info(`Pedido ${pedidoID} enviado`)
-      return pedidoActual(req)
+      return pedido
     })
 
     this.on('entregar', 'Pedidos', async (req) => {

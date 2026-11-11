@@ -13,6 +13,9 @@ service TiendaService {
 
   function totalPorCliente(cliente : Integer) returns Decimal(12,2);
 
+  event PedidoEnviado : (pedido : Integer, cliente : Integer, total : Decimal(12,2));
+  event StockBajo : (producto : Integer, nombre : String(100), stock : Integer);
+
   @cds.redirection.target: false
   entity ClientesSinEmail as projection on db.Clientes excluding { email };
 }

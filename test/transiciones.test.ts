@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { transicionPermitida } from '../srv/lib/transiciones.js'
+import { transicionPermitida } from '../srv/lib/transiciones.ts'
 
 describe('Transiciones de estado', () => {
   it('permite enviar un pedido Nuevo', () => {

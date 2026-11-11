@@ -1,5 +1,5 @@
 namespace tienda;
-using { managed } from '@sap/cds/common';
+using { managed, cuid } from '@sap/cds/common';
 
 type Estado : String(20) enum { Nuevo; Enviado; Entregado; Cancelado; }
 
@@ -32,4 +32,9 @@ entity PedidoItems {
       cantidad : Integer;
       precio   : Decimal(10,2);
       subtotal : Decimal(12,2) = precio * cantidad;
+}
+
+entity Notificaciones : cuid, managed {
+  tipo    : String(20);
+  mensaje : String(200);
 }
