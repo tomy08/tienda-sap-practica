@@ -136,4 +136,28 @@ describe('TiendaService', () => {
       assert.equal(Number(data?.value), 515000) // pedido 1 del CSV
     })
   })
+
+  describe('Eventos', () => {
+    const avisos = '/odata/v4/notificaciones/Notificaciones'
+
+    it('enviar un pedido genera los avisos correspondientes', async () => {
+      await POST(`${base}/Pedidos(1)/TiendaService.enviar`, {})
+
+      const { data } = await GET(avisos)
+      const tipos = data.value.map((n: any) => n.tipo).sort()
+      assert.deepEqual(tipos, ['PEDIDO_ENVIADO', 'STOCK_BAJO'])
+    })
+
+    it('un envío que falla no genera avisos', async () => {
+      await POST(`${base}/Pedidos`, {
+        ID: 40,
+        cliente_ID: 2,
+        items: [{ pos: 1, producto_ID: 3, cantidad: 2 }],
+      })
+      await llamar(POST(`${base}/Pedidos(40)/TiendaService.enviar`, {}))
+
+      const { data } = await GET(avisos)
+      assert.equal(data.value.length, 0)
+    })
+  })
 })

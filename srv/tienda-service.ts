@@ -53,12 +53,12 @@ async function descontarStock(req: cds.Request, pedidoID: number) {
     if (filas === 0) sinStock.push(String(item.producto_ID))
 
     const producto = await SELECT.one
-      .from(Productos, item.producto_ID)
+      .from(Productos, item.producto_ID!)
       .columns('ID', 'nombre', 'stock')
     const stock = producto?.stock ?? 0
     if (producto && stock <= UMBRAL_STOCK) {
       stockBajo.push({
-        producto: producto.ID,
+        producto: producto.ID!,
         nombre: producto.nombre ?? '',
         stock,
       })
