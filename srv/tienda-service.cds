@@ -23,7 +23,10 @@ service TiendaService {
     producto : Integer;
     nombre   : String(100);
     stock    : Integer;
+
   }
+
+  event PedidoCancelado : { pedido : Integer; motivo : String(200); }
 
   @cds.redirection.target: false
   entity ClientesSinEmail as projection on db.Clientes excluding { email };

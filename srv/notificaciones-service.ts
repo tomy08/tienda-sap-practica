@@ -25,6 +25,15 @@ export default class NotificacionesService extends cds.ApplicationService {
       LOG.warn(`Stock bajo: ${nombre} (${stock})`)
     })
 
+    tienda.on('PedidoCancelado', async (msg) => {
+      const { pedido, motivo } = msg.data
+      await INSERT.into(Notificaciones).entries({
+        tipo: 'PEDIDO_CANCELADO',
+        mensaje: `Pedido ${pedido} cancelado por ${motivo}`,
+      })
+      LOG.info(`Aviso registrado: pedido ${pedido} cancelado`)
+    })
+
     return super.init()
   }
 }

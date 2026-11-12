@@ -167,8 +167,14 @@ export default class TiendaService extends cds.ApplicationService {
     this.on('cancelar', 'Pedidos', async (req) => {
       const { motivo } = req.data
       if (!motivo?.trim()) return req.reject(400, 'MOTIVO_OBLIGATORIO')
-      await cambiarEstado(req, 'cancelar', { motivoCancelacion: motivo })
-      return pedidoActual(req)
+
+      const pedidoID = await cambiarEstado(req, 'cancelar', {
+        motivoCancelacion: motivo,
+      })
+      await this.emit('PedidoCancelado', { pedido: pedidoID, motivo })
+
+      LOG.info(`Pedido ${pedidoID} cancelado`)
+      return pedidoActual(req) // leído DESPUÉS del cambio
     })
 
     this.on('devolver', 'Pedidos', async (req) => {

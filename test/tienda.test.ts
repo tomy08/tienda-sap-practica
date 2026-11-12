@@ -159,5 +159,15 @@ describe('TiendaService', () => {
       const { data } = await GET(avisos)
       assert.equal(data.value.length, 0)
     })
+
+    it('cancelar un pedido genera un aviso', async () => {
+      await POST(`${base}/Pedidos(1)/TiendaService.cancelar`, {
+        motivo: 'Cliente arrepentido',
+      })
+
+      const { data } = await GET(avisos)
+      assert.equal(data.value.length, 1)
+      assert.equal(data.value[0].tipo, 'PEDIDO_CANCELADO')
+    })
   })
 })

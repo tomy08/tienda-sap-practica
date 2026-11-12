@@ -1,0 +1,1 @@
+using TiendaService as service from '../../srv/tienda-service';
