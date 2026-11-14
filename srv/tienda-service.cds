@@ -34,9 +34,13 @@ service TiendaService {
 
 // El cliente no puede tocar estos campos: solo los cambian las actions
 annotate TiendaService.Pedidos with {
+  ID @Core.Computed;
   estado            @readonly;
   motivoCancelacion @readonly;
 };
+
+// Edición con borradores (Fiori Elements)
+annotate TiendaService.Pedidos with @odata.draft.enabled;
 
 annotate TiendaService.Productos with {
   stock @readonly;

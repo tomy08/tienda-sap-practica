@@ -142,17 +142,6 @@
               }
             }
           }
-        },
-        "PedidoItemsObjectPage": {
-          "type": "Component",
-          "id": "PedidoItemsObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
-          "options": {
-            "settings": {
-              "editableHeaderContent": false,
-              "contextPath": "/Pedidos/items"
-            }
-          }
         }
       }
     }

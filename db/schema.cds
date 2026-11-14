@@ -25,13 +25,13 @@ entity Pedidos : managed {
       items             : Composition of many PedidoItems on items.pedido = $self;
 }
 
-entity PedidoItems {
-  key pedido   : Association to Pedidos;
-  key pos      : Integer;
-      producto : Association to Productos;
-      cantidad : Integer;
-      precio   : Decimal(10,2);
-      subtotal : Decimal(12,2) = precio * cantidad;
+entity PedidoItems : cuid {
+  pedido   : Association to Pedidos;
+  pos      : Integer;
+  producto : Association to Productos;
+  cantidad : Integer;
+  precio   : Decimal(10,2);
+  subtotal : Decimal(12,2) = precio * cantidad;
 }
 
 entity Notificaciones : cuid, managed {

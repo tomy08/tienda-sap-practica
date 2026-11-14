@@ -1,37 +1,14 @@
 @base = http://localhost:4004/odata/v4/tienda
 
-### 1. Pedido 40 con 2 teclados (hay solo 1 en stock)
+### Crear un borrador (el número lo asigna el servidor)
+# @name nuevo
 POST {{base}}/Pedidos
 Content-Type: application/json
 
-{ "ID": 40, "cliente_ID": 2, "items": [ { "pos": 1, "producto_ID": 3, "cantidad": 2 } ] }
+{ "cliente_ID": 2, "items": [ { "pos": 1, "producto_ID": 3, "cantidad": 2 } ] }
 
-### 2. Enviarlo → 409 sin stock
-POST {{base}}/Pedidos(40)/TiendaService.enviar
+### Activarlo, usando el ID que devolvió la request anterior
+POST {{base}}/Pedidos(ID={{nuevo.response.body.$.ID}},IsActiveEntity=false)/TiendaService.draftActivate
 Content-Type: application/json
 
 {}
-
-### 3. ¿Cambió el estado? → sigue Nuevo (rollback)
-GET {{base}}/Pedidos(40)
-
-### 4. ¿Cambió el stock? → el teclado sigue en 1
-GET {{base}}/Productos(3)
-
-### 5. Enviar el pedido 1 (2 monitores + 1 mouse) → 200
-POST {{base}}/Pedidos(1)/TiendaService.enviar
-Content-Type: application/json
-
-{}
-
-### 6. Stock actualizado → monitor 3, mouse 49
-GET {{base}}/Productos
-
-### 7. Pedido con dos productos inexistentes → 400 con los dos errores juntos
-POST {{base}}/Pedidos
-Content-Type: application/json
-
-{ "ID": 41, "cliente_ID": 1, "items": [
-  { "pos": 1, "producto_ID": 98, "cantidad": 1 },
-  { "pos": 2, "producto_ID": 99, "cantidad": 1 }
-] }

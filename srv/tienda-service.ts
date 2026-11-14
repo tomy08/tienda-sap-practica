@@ -97,6 +97,17 @@ const pedidoActual = (req: cds.Request) => SELECT.one.from(req.subject)
 
 export default class TiendaService extends cds.ApplicationService {
   async init() {
+    // Numerar los pedidos nuevos al crear el borrador (si nadie mandó un ID)
+    this.before('NEW', Pedidos.drafts, async (req) => {
+      const activos = (await SELECT.one
+        .from(PedidosDB)
+        .columns('max(ID) as max')) as { max?: number } | null
+      const borradores = (await SELECT.one
+        .from(Pedidos.drafts)
+        .columns('max(ID) as max')) as { max?: number } | null
+      req.data.ID = Math.max(activos?.max ?? 0, borradores?.max ?? 0) + 1
+    })
+
     // CRUD de pedidos: completar precios y total
     this.before(['CREATE', 'UPDATE'], Pedidos, async (req) => {
       if (req.event === 'UPDATE' && req.data.items === undefined) return
@@ -105,6 +116,10 @@ export default class TiendaService extends cds.ApplicationService {
       if (items.length === 0) {
         req.data.total = 0
         return
+      }
+      let siguiente = Math.max(0, ...items.map((item) => item.pos ?? 0)) + 1
+      for (const item of items) {
+        if (item.pos == null) item.pos = siguiente++
       }
 
       const ids = items.map((item) => item.producto_ID)
