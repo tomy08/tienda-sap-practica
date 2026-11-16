@@ -19,7 +19,6 @@ import type Shell from "sap/fe/test/Shell";
 import type BaseArrangements from "sap/fe/test/BaseArrangements";
 import type { actions as PedidosListGeneratedCustomActions, assertions as PedidosListGeneratedCustomAssertions } from "../pages/PedidosList.gen";
 import type { actions as PedidosObjectPageGeneratedCustomActions, assertions as PedidosObjectPageGeneratedCustomAssertions } from "../pages/PedidosObjectPage.gen";
-import type { actions as PedidoItemsObjectPageGeneratedCustomActions, assertions as PedidoItemsObjectPageGeneratedCustomAssertions } from "../pages/PedidoItemsObjectPage.gen";
 
 /**
  * Enables OPA5 fluent `.and` chaining on page objects and their sub-objects.
@@ -49,13 +48,11 @@ export type Given = Opa5 & BaseArrangements & {
 export type When = Opa5 & BaseArrangements & {
     onThePedidosListGenerated: WithAnd<Opa5 & ListReportActions & TemplatePageActions & typeof PedidosListGeneratedCustomActions>;
     onThePedidosObjectPageGenerated: WithAnd<Opa5 & ObjectPageActions & TemplatePageActions & typeof PedidosObjectPageGeneratedCustomActions>;
-    onThePedidoItemsObjectPageGenerated: WithAnd<Opa5 & ObjectPageActions & TemplatePageActions & typeof PedidoItemsObjectPageGeneratedCustomActions>;
     onTheShell: Shell;
 };
 
 export type Then = Opa5 & BaseArrangements & {
     onThePedidosListGenerated: WithAnd<Opa5 & ListReportAssertions & TemplatePageAssertions & typeof PedidosListGeneratedCustomAssertions>;
     onThePedidosObjectPageGenerated: WithAnd<Opa5 & ObjectPageAssertions & TemplatePageAssertions & typeof PedidosObjectPageGeneratedCustomAssertions>;
-    onThePedidoItemsObjectPageGenerated: WithAnd<Opa5 & ObjectPageAssertions & TemplatePageAssertions & typeof PedidoItemsObjectPageGeneratedCustomAssertions>;
     onTheShell: Shell;
 };

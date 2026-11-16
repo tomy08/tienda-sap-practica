@@ -92,11 +92,6 @@
           "pattern": "Pedidos({key}):?query:",
           "name": "PedidosObjectPage",
           "target": "PedidosObjectPage"
-        },
-        {
-          "pattern": "Pedidos({key})/items({key2}):?query:",
-          "name": "PedidoItemsObjectPage",
-          "target": "PedidoItemsObjectPage"
         }
       ],
       "targets": {
@@ -132,14 +127,7 @@
           "options": {
             "settings": {
               "editableHeaderContent": false,
-              "contextPath": "/Pedidos",
-              "navigation": {
-                "items": {
-                  "detail": {
-                    "route": "PedidoItemsObjectPage"
-                  }
-                }
-              }
+              "contextPath": "/Pedidos"
             }
           }
         }
