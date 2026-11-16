@@ -192,11 +192,12 @@ annotate service.Pedidos with @(
 );
 
 // Cuándo está habilitado cada botón
+// (solo sobre el pedido guardado: en borrador, IsActiveEntity es false)
 annotate service.Pedidos with actions {
-  enviar   @Core.OperationAvailable: {$edmJson: {$Path: 'in/esNuevo'}};
-  cancelar @Core.OperationAvailable: {$edmJson: {$Path: 'in/esNuevo'}};
-  entregar @Core.OperationAvailable: {$edmJson: {$Path: 'in/esEnviado'}};
-  devolver @Core.OperationAvailable: {$edmJson: {$Path: 'in/esEnviado'}};
+  enviar   @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esNuevo'},   {$Path: 'in/IsActiveEntity'}]}};
+  cancelar @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esNuevo'},   {$Path: 'in/IsActiveEntity'}]}};
+  entregar @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esEnviado'}, {$Path: 'in/IsActiveEntity'}]}};
+  devolver @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esEnviado'}, {$Path: 'in/IsActiveEntity'}]}};
 };
 
 // Etiqueta del campo que aparece en el diálogo de Cancelar
