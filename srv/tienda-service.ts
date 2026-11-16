@@ -1,5 +1,9 @@
 import cds from '@sap/cds'
-import { Pedidos, totalPorCliente } from '#cds-models/TiendaService'
+import {
+  Pedidos,
+  PedidoItems as PedidoItemsSrv,
+  totalPorCliente,
+} from '#cds-models/TiendaService'
 import {
   Productos,
   PedidoItems,
@@ -106,6 +110,15 @@ export default class TiendaService extends cds.ApplicationService {
         .from(Pedidos.drafts)
         .columns('max(ID) as max')) as { max?: number } | null
       req.data.ID = Math.max(activos?.max ?? 0, borradores?.max ?? 0) + 1
+    })
+
+    // Numerar la posición de cada ítem nuevo dentro del borrador del pedido
+    this.before('NEW', PedidoItemsSrv.drafts, async (req) => {
+      const ultimo = (await SELECT.one
+        .from(PedidoItemsSrv.drafts)
+        .columns('max(pos) as max')
+        .where({ pedido_ID: req.data.pedido_ID })) as { max?: number } | null
+      req.data.pos = (ultimo?.max ?? 0) + 1
     })
 
     // CRUD de pedidos: completar precios y total

@@ -39,6 +39,11 @@ annotate TiendaService.Pedidos with {
   motivoCancelacion @readonly;
 };
 
+// La posición del ítem la asigna el servidor
+annotate TiendaService.PedidoItems with {
+  pos @readonly;
+};
+
 // Edición con borradores (Fiori Elements)
 annotate TiendaService.Pedidos with @odata.draft.enabled;
 
