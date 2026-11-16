@@ -11,6 +11,10 @@
     "allowImportingTsExtensions": true,
     "sourceMap": true,
     "allowJs": true,
+    "types": [
+      "node",
+      "@cap-js/cds-types"
+    ],
     "paths": {
       "#cds-models/*": [
         "./@cds-models/*"
