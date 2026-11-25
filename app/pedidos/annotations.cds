@@ -1,34 +1,42 @@
 using TiendaService as service from '../../srv/tienda-service';
 
-// 1. Etiquetas: se usan en toda la app (columnas, filtros, formularios)
-
+// ---------- Etiquetas de Pedidos ----------
 
 annotate service.Pedidos with {
-  ID                @title: 'Pedido';
-  estado            @title: 'Estado';
-  total             @title: 'Total';
-  motivoCancelacion @title: 'Motivo de cancelación';
-  createdAt         @title: 'Creado el';
-  createdBy         @title: 'Creado por';
-  modifiedAt        @title: 'Modificado el';
-  modifiedBy        @title: 'Modificado por';
+  ID                @title: '{i18n>Pedido}';
+  estado            @title: '{i18n>Estado}';
+  total             @title                 : '{i18n>Total}'
+                    @Common.FieldControl   : #ReadOnly;
+  motivoCancelacion @title: '{i18n>MotivoCancelacion}';
+  createdAt         @title: '{i18n>CreadoEl}';
+  createdBy         @title: '{i18n>CreadoPor}';
+  modifiedAt        @title: '{i18n>ModificadoEl}';
+  modifiedBy        @title: '{i18n>ModificadoPor}';
+  cliente           @title                 : '{i18n>Cliente}'
+                    @Common.Text           : cliente.nombre
+                    @Common.TextArrangement: #TextOnly;
+
+  // Campos auxiliares: existen para que la pantalla decida, no para mostrarse
+  esNuevo           @UI.Hidden;
+  esEnviado         @UI.Hidden;
+  bloqueado         @UI.Hidden;
+  criticidad        @UI.Hidden;
 }
 
-// 2. Cómo se ve la lista y la cabecera de cada pedido
+// ---------- List Report y cabecera ----------
+
 annotate service.Pedidos with @(
-  // Barra de filtros
   UI.SelectionFields: [
     ID,
     cliente_ID,
     estado
   ],
 
-  // Columnas de la tabla, en este orden
   UI.LineItem       : [
     {Value: ID},
     {
       Value: cliente.nombre,
-      Label: 'Cliente'
+      Label: '{i18n>Cliente}'
     },
     {
       Value      : estado,
@@ -39,23 +47,49 @@ annotate service.Pedidos with @(
     {
       $Type : 'UI.DataFieldForAction',
       Action: 'TiendaService.enviar',
-      Label : 'Enviar'
+      Label : '{i18n>Enviar}'
     },
   ],
 
-  // Título y subtítulo de cada pedido (se ve en el Object Page)
   UI.HeaderInfo     : {
-    TypeName      : 'Pedido',
-    TypeNamePlural: 'Pedidos',
+    TypeName      : '{i18n>Pedido}',
+    TypeNamePlural: '{i18n>Pedidos}',
     Title         : {Value: ID},
     Description   : {Value: cliente.nombre},
-  }
+  },
+
+  // Botones de la cabecera del Object Page
+  UI.Identification : [
+    {
+      $Type : 'UI.DataFieldForAction',
+      Action: 'TiendaService.enviar',
+      Label : '{i18n>Enviar}'
+    },
+    {
+      $Type : 'UI.DataFieldForAction',
+      Action: 'TiendaService.entregar',
+      Label : '{i18n>Entregar}'
+    },
+    {
+      $Type : 'UI.DataFieldForAction',
+      Action: 'TiendaService.cancelar',
+      Label : '{i18n>Cancelar}'
+    },
+    {
+      $Type : 'UI.DataFieldForAction',
+      Action: 'TiendaService.devolver',
+      Label : '{i18n>Devolver}'
+    },
+  ],
+
+  // Editar y borrar solo pedidos Nuevos
+  UI.UpdateHidden   : bloqueado,
+  UI.DeleteHidden   : bloqueado,
 );
 
 // ---------- Object Page de Pedidos ----------
 
 annotate service.Pedidos with @(
-  // Grupos de campos (el #nombre es el calificador)
   UI.FieldGroup #General  : {Data: [
     {Value: ID},
     {Value: cliente_ID},
@@ -69,7 +103,6 @@ annotate service.Pedidos with @(
     {Value: total},
     {Value: motivoCancelacion},
   ]},
-
   UI.FieldGroup #Auditoria: {Data: [
     {Value: createdAt},
     {Value: createdBy},
@@ -77,37 +110,60 @@ annotate service.Pedidos with @(
     {Value: modifiedBy},
   ]},
 
-  // Secciones del Object Page, en este orden
   UI.Facets               : [
     {
       $Type : 'UI.ReferenceFacet',
       ID    : 'General',
-      Label : 'General',
+      Label : '{i18n>General}',
       Target: '@UI.FieldGroup#General'
     },
     {
       $Type : 'UI.ReferenceFacet',
       ID    : 'Totales',
-      Label : 'Importes',
+      Label : '{i18n>Importes}',
       Target: '@UI.FieldGroup#Totales'
     },
     {
       $Type : 'UI.ReferenceFacet',
       ID    : 'Items',
-      Label : 'Ítems',
+      Label : '{i18n>Items}',
       Target: 'items/@UI.LineItem'
     },
     {
       $Type : 'UI.ReferenceFacet',
       ID    : 'Auditoria',
-      Label : 'Auditoría',
+      Label : '{i18n>Auditoria}',
       Target: '@UI.FieldGroup#Auditoria'
     },
   ]
 );
 
-// ---------- Tabla de ítems ----------
+// ---------- Actions ----------
 
+annotate service.Pedidos with actions {
+  enviar   @Core.OperationAvailable: {$edmJson: {$Path: 'in/esNuevo'}};
+  cancelar @Core.OperationAvailable: {$edmJson: {$Path: 'in/esNuevo'}};
+  entregar @Core.OperationAvailable: {$edmJson: {$Path: 'in/esEnviado'}};
+  devolver @Core.OperationAvailable: {$edmJson: {$Path: 'in/esEnviado'}};
+};
+
+annotate service.Pedidos with actions {
+  cancelar(motivo @title: '{i18n>MotivoCancelacion}' );
+};
+
+// ---------- Ítems ----------
+
+annotate service.PedidoItems with {
+  pos      @title                 : '{i18n>Posicion}'
+           @Common.FieldControl   : #ReadOnly;
+  producto @title                 : '{i18n>Producto}'
+           @Common.Text           : producto.nombre
+           @Common.TextArrangement: #TextOnly;
+  cantidad @title: '{i18n>Cantidad}';
+  precio   @title                 : '{i18n>PrecioUnitario}'
+           @Common.FieldControl   : #ReadOnly;
+  subtotal @title: '{i18n>Subtotal}';
+}
 
 annotate service.PedidoItems with @(UI.LineItem: [
   {Value: pos},
@@ -117,98 +173,21 @@ annotate service.PedidoItems with @(UI.LineItem: [
   {Value: subtotal},
 ]);
 
-// ---------- Value help de clientes ----------
+// ---------- Value helps ----------
 
 annotate service.Clientes with @cds.odata.valuelist;
 
-annotate service.Pedidos with {
-  cliente @title                 : 'Cliente'
-          @Common.Text           : cliente.nombre
-          @Common.TextArrangement: #TextOnly;
-}
-
-// Etiquetas de las columnas del diálogo
 annotate service.Clientes with {
-  ID     @title: 'Nº de cliente';
-  nombre @title: 'Nombre';
-  email  @title: 'Email';
-}
-
-
-// ---------- Edición ----------
-
-// Campos que se ven pero no se editan (los calcula el servidor)
-annotate service.Pedidos with {
-  total @Common.FieldControl: #ReadOnly;
-}
-
-// Producto: mostrar el nombre en vez del ID y elegirlo de una lista
-annotate service.PedidoItems with {
-  producto @title                 : 'Producto'
-           @Common.Text           : producto.nombre
-           @Common.TextArrangement: #TextOnly;
-  precio   @Common.FieldControl: #ReadOnly;
+  ID     @title: '{i18n>NroCliente}';
+  nombre @title: '{i18n>Nombre}';
+  email  @title: '{i18n>Email}';
 }
 
 annotate service.Productos with @cds.odata.valuelist;
 
 annotate service.Productos with {
-  ID     @title: 'Nº de producto';
-  nombre @title: 'Nombre';
-  precio @title: 'Precio';
-  stock  @title: 'Stock';
-}
-
-// ---------- Actions y estados ----------
-
-// Botones de la cabecera del Object Page
-annotate service.Pedidos with @(
-  UI.Identification: [
-    {
-      $Type : 'UI.DataFieldForAction',
-      Action: 'TiendaService.enviar',
-      Label : 'Enviar'
-    },
-    {
-      $Type : 'UI.DataFieldForAction',
-      Action: 'TiendaService.entregar',
-      Label : 'Entregar'
-    },
-    {
-      $Type : 'UI.DataFieldForAction',
-      Action: 'TiendaService.cancelar',
-      Label : 'Cancelar'
-    },
-    {
-      $Type : 'UI.DataFieldForAction',
-      Action: 'TiendaService.devolver',
-      Label : 'Devolver'
-    },
-  ],
-
-  // Editar y borrar solo pedidos Nuevos
-  UI.UpdateHidden  : bloqueado,
-  UI.DeleteHidden  : bloqueado,
-);
-
-// Cuándo está habilitado cada botón
-// (solo sobre el pedido guardado: en borrador, IsActiveEntity es false)
-annotate service.Pedidos with actions {
-  enviar   @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esNuevo'},   {$Path: 'in/IsActiveEntity'}]}};
-  cancelar @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esNuevo'},   {$Path: 'in/IsActiveEntity'}]}};
-  entregar @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esEnviado'}, {$Path: 'in/IsActiveEntity'}]}};
-  devolver @Core.OperationAvailable: {$edmJson: {$And: [{$Path: 'in/esEnviado'}, {$Path: 'in/IsActiveEntity'}]}};
-};
-
-// Etiqueta del campo que aparece en el diálogo de Cancelar
-annotate service.Pedidos with actions {
-  cancelar(motivo @title: 'Motivo de cancelación' );
-};
-
-// Los campos auxiliares no tienen que aparecer en la pantalla
-annotate service.Pedidos with {
-  esNuevo    @UI.Hidden;
-  esEnviado  @UI.Hidden;
-  bloqueado  @UI.Hidden;
-  criticidad @UI.Hidden;
+  ID     @title: '{i18n>NroProducto}';
+  nombre @title: '{i18n>Nombre}';
+  precio @title: '{i18n>Precio}';
+  stock  @title: '{i18n>Stock}';
 }

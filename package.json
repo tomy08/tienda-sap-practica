@@ -33,6 +33,29 @@
         "credentials": {
           "url": "data.db"
         }
+      },
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "vendedor": {
+            "password": "123",
+            "roles": [
+              "Vendedor"
+            ]
+          },
+          "deposito": {
+            "password": "123",
+            "roles": [
+              "Deposito"
+            ]
+          },
+          "admin": {
+            "password": "123",
+            "roles": [
+              "Admin"
+            ]
+          }
+        }
       }
     }
   },

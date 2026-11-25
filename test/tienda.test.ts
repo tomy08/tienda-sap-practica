@@ -18,7 +18,18 @@ async function llamar(request: Promise<any>) {
 
 describe('TiendaService', () => {
   const test = cds.test(import.meta.dirname + '/..') // levanta el proyecto
-  const { GET, POST, PATCH } = test
+  // Usuario para una request
+  const como = (usuario: string) => ({
+    auth: { username: usuario, password: '123' },
+  })
+
+  // Por defecto, los tests actúan como admin; se puede pasar otro usuario
+  const { GET: get, POST: post, PATCH: patch } = test
+  const GET = (url: string, config: object = como('admin')) => get(url, config)
+  const POST = (url: string, data?: any, config: object = como('admin')) =>
+    post(url, data, config)
+  const PATCH = (url: string, data?: any, config: object = como('admin')) =>
+    patch(url, data, config)
   const base = '/odata/v4/tienda'
   const avisos = '/odata/v4/notificaciones/Notificaciones'
 
@@ -206,6 +217,46 @@ describe('TiendaService', () => {
       assert.equal(data.value.length, 1)
       assert.equal(data.value[0].tipo, 'PEDIDO_CANCELADO')
       assert.match(data.value[0].mensaje, /Cliente arrepentido/)
+    })
+  })
+
+  describe('Seguridad', () => {
+    it('sin iniciar sesión, no se puede entrar', async () => {
+      const { status } = await llamar(get(`${base}/Productos`)) // get sin usuario
+      assert.equal(status, 401)
+    })
+
+    it('el vendedor puede enviar, pero no entregar', async () => {
+      const envio = await llamar(
+        POST(`${activo(1)}/TiendaService.enviar`, {}, como('vendedor')),
+      )
+      assert.equal(envio.status, 200)
+
+      const entrega = await llamar(
+        POST(`${activo(1)}/TiendaService.entregar`, {}, como('vendedor')),
+      )
+      assert.equal(entrega.status, 403)
+    })
+
+    it('el depósito no puede crear pedidos', async () => {
+      const { status } = await llamar(
+        POST(`${base}/Pedidos`, { cliente_ID: 1 }, como('deposito')),
+      )
+      assert.equal(status, 403)
+    })
+
+    it('el vendedor no puede ver las notificaciones', async () => {
+      const { status } = await llamar(GET(avisos, como('vendedor')))
+      assert.equal(status, 403)
+    })
+
+    it('el pedido guarda quién lo creó', async () => {
+      const creado = await crearPedido({
+        cliente_ID: 1,
+        items: [{ producto_ID: 2, cantidad: 1 }],
+      })
+      const { data } = await GET(activo(creado.data.ID))
+      assert.equal(data.createdBy, 'admin')
     })
   })
 })
